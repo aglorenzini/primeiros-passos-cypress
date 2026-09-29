@@ -1,29 +1,31 @@
 import userData from "../fixtures/users/userData.json";
+import MenuPage from "../pages/menuPage.js";
+import LoginPage from "../pages/loginPage.js";
+import DashboardPage from "../pages/dashboardPage.js";
 
-const selectorsList = {
-  usernameField: "[name='username']",
-  passwordField: "[name='password']",
-  loginButton: ".oxd-button",
-  sectionTitleTopBar: ".oxd-topbar-header-breadcrumb-module",
-  dashboardGrid: ".orangehrm-dashboard-grid",
-  wrongCredentialAlert: ".oxd-alert",
-  myInfoButton: '[href="/web/index.php/pim/viewMyDetails"]',
-  firstNameField: '[name="firstName"]',
-  middleNameField: '[name="middleName"]',
-  lastNameField: '[name="lastName"]',
-  dateField: '[placeholder="yyyy-dd-mm"]',
-  dateCloseButton: '.--close',
-  genericField: '.oxd-input',
-  submitButton: '[type="submit"]'
-}
-
+const menuPage = new MenuPage();
+const loginPage = new LoginPage();
+const dashboardPage = new DashboardPage();
+ 
 describe('Login Page', () => {
+
+ const selectorsList = {
+    firstNameField: '[name="firstName"]',
+    middleNameField: '[name="middleName"]',
+    lastNameField: '[name="lastName"]',
+    dateField: '[placeholder="yyyy-dd-mm"]',
+    dateCloseButton: '.--close',
+    genericField: '.oxd-input',
+    dropListArrow: '.oxd-select-text--arrow',
+    submitButton: '[type="submit"]'
+  }
+
   it('Login Success', () => {
     cy.visit('/auth/login');
     cy.get(selectorsList.usernameField).type(userData.userSuccess.userName);
     cy.get(selectorsList.passwordField).type(userData.userSuccess.password);
     cy.get(selectorsList.loginButton).click();
-    cy.location('pathname').should('equal', '/web/index.php/dashboard/index');
+    
     cy.get(selectorsList.dashboardGrid);
   })
 
@@ -36,13 +38,10 @@ describe('Login Page', () => {
   })
 
   it.only('User Info Update - Success', () => {
-    cy.visit('/auth/login');
-    cy.get(selectorsList.usernameField).type(userData.userSuccess.userName);
-    cy.get(selectorsList.passwordField).type(userData.userSuccess.password);
-    cy.get(selectorsList.loginButton).click();
-    cy.location('pathname').should('equal', '/web/index.php/dashboard/index');
-    cy.get(selectorsList.dashboardGrid);
-    cy.get(selectorsList.myInfoButton).click();
+    loginPage.accessLoginPage();
+    loginPage.loginWithUser(userData.userSuccess.userName, userData.userSuccess.password);
+    dashboardPage.checkDashboardPage();
+    menuPage.acessMyInfo();
     cy.get(selectorsList.firstNameField).clear().type('Santa');
     cy.get(selectorsList.middleNameField).clear().type('Xmas');
     cy.get(selectorsList.lastNameField).clear().type('Claus');
@@ -51,6 +50,9 @@ describe('Login Page', () => {
     cy.get(selectorsList.dateCloseButton).click();
     cy.get(selectorsList.dateField).eq(1).clear().type('1992-11-16');
     cy.get(selectorsList.dateCloseButton).click();
+    cy.get(selectorsList.dropListArrow).eq(0).click();
+    cy.contains('[role="option"]', 'Brazilian').click();
+    //saving the new information
     cy.get(selectorsList.submitButton).eq(0).click();
     cy.get('body').should('contain', 'Successfully Updated');
     cy.get('.oxd-toast-close');
